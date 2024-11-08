@@ -3,22 +3,21 @@
 #define KALPY_PYBIND_UTIL_H_
 
 #include "pybind/kaldi_pybind.h"
-
-#include "util/kaldi-table.h"
-#include "util/kaldi-io.h"
 #include "util/kaldi-holder-inl.h"
+#include "util/kaldi-io.h"
+#include "util/kaldi-table.h"
 #include "util/parse-options.h"
 
 using namespace kaldi;
 
 template <class Holder>
-void pybind_sequential_table_reader(py::module& m,
-                                    const std::string& class_name,
-                                    const std::string& class_help_doc = "") {
+void pybind_sequential_table_reader(py::module &m,
+                                    const std::string &class_name,
+                                    const std::string &class_help_doc = "") {
   using PyClass = SequentialTableReader<Holder>;
   py::class_<PyClass>(m, class_name.c_str(), class_help_doc.c_str())
       .def(py::init<>())
-      .def(py::init<const std::string&>(),
+      .def(py::init<const std::string &>(),
            "This constructor equivalent to default constructor + 'open', but "
            "throws on error.",
            py::arg("rspecifier"))
@@ -35,7 +34,7 @@ void pybind_sequential_table_reader(py::module& m,
            "status; otherwise the destructor will throw.")
       .def("Key", &PyClass::Key,
            "Only valid to call Key() if Done() returned false.",
-      py::call_guard<py::gil_scoped_release>())
+           py::call_guard<py::gil_scoped_release>())
       .def("FreeCurrent", &PyClass::FreeCurrent,
            "FreeCurrent() is provided as an optimization to save memory, for "
            "large objects.  It instructs the class to deallocate the current "
@@ -52,12 +51,12 @@ void pybind_sequential_table_reader(py::module& m,
            "non-const to enable things like shallow swap on the held object in "
            "situations where this would avoid making a redundant copy.",
            py::return_value_policy::reference,
-      py::call_guard<py::gil_scoped_release>())
+           py::call_guard<py::gil_scoped_release>())
       .def("Next", &PyClass::Next,
            "Next goes to the next key.  It will not throw; any error will "
            "result in Done() returning true, and then the destructor will "
            "throw unless you call Close().",
-      py::call_guard<py::gil_scoped_release>())
+           py::call_guard<py::gil_scoped_release>())
       .def("IsOpen", &PyClass::IsOpen,
            "Returns true if table is open for reading (does not imply stream "
            "is in good state).")
@@ -70,13 +69,13 @@ void pybind_sequential_table_reader(py::module& m,
 }
 
 template <class Holder>
-void pybind_random_access_table_reader(py::module& m,
-                                       const std::string& class_name,
-                                       const std::string& class_help_doc = "") {
+void pybind_random_access_table_reader(py::module &m,
+                                       const std::string &class_name,
+                                       const std::string &class_help_doc = "") {
   using PyClass = RandomAccessTableReader<Holder>;
   py::class_<PyClass>(m, class_name.c_str(), class_help_doc.c_str())
       .def(py::init<>())
-      .def(py::init<const std::string&>(),
+      .def(py::init<const std::string &>(),
            "This constructor equivalent to default constructor + 'open', but "
            "throws on error.",
            py::arg("rspecifier"))
@@ -90,23 +89,22 @@ void pybind_random_access_table_reader(py::module& m,
            "Says if it has this key. If you are using the 'permissive' (p) "
            "read option, it will return false for keys whose corresponding "
            "entry in the scp file cannot be read.",
-           py::arg("key"),
-      py::call_guard<py::gil_scoped_release>())
+           py::arg("key"), py::call_guard<py::gil_scoped_release>())
       .def("Value", &PyClass::Value,
            "Value() may throw if you are reading an scp file, you do not have "
            "the ' permissive'  (p) option, and an entry in the scp file cannot "
            "be read. Typically you won't want to catch this error.",
            py::return_value_policy::reference,
-      py::call_guard<py::gil_scoped_release>());
+           py::call_guard<py::gil_scoped_release>());
 }
 
 template <class Holder>
-void pybind_table_writer(py::module& m, const std::string& class_name,
-                         const std::string& class_help_doc = "") {
+void pybind_table_writer(py::module &m, const std::string &class_name,
+                         const std::string &class_help_doc = "") {
   using PyClass = TableWriter<Holder>;
   py::class_<PyClass>(m, class_name.c_str(), class_help_doc.c_str())
       .def(py::init<>())
-      .def(py::init<const std::string&>(),
+      .def(py::init<const std::string &>(),
            "This constructor equivalent to default constructor + 'open', but "
            "throws on error.",
            py::arg("wspecifier"))
@@ -119,7 +117,7 @@ void pybind_table_writer(py::module& m, const std::string& class_name,
            "Write the object. Throws KaldiFatalError on error via the "
            "KALDI_ERR macro.",
            py::arg("key"), py::arg("value"),
-      py::call_guard<py::gil_scoped_release>())
+           py::call_guard<py::gil_scoped_release>())
       .def("Flush", &PyClass::Flush,
            "Flush will flush any archive; it does not return error status or "
            "throw, any errors will be reported on the next Write or Close. "
@@ -132,28 +130,25 @@ void pybind_table_writer(py::module& m, const std::string& class_name,
 }
 
 template <class C>
-void pybind_read_kaldi_object(py::module& m) {
+void pybind_read_kaldi_object(py::module &m) {
   m.def("ReadKaldiObject",
-          py::overload_cast<const std::string &,
-                                        C *>(&ReadKaldiObject<C>),
-           py::arg("filename"),
-           py::arg("c"),
-      py::call_guard<py::gil_scoped_release>()
-     );
+        py::overload_cast<const std::string &, C *>(&ReadKaldiObject<C>),
+        py::arg("filename"), py::arg("c"),
+        py::call_guard<py::gil_scoped_release>());
 }
 
 template <class BasicType>
-void pybind_basic_vector_holder(py::module& m, const std::string& class_name,
-                                const std::string& class_help_doc = "") {
+void pybind_basic_vector_holder(py::module &m, const std::string &class_name,
+                                const std::string &class_help_doc = "") {
   using PyClass = BasicVectorHolder<BasicType>;
   py::class_<PyClass>(m, class_name.c_str(), class_help_doc.c_str())
       .def(py::init<>())
       .def("Clear", &PyClass::Clear)
       .def("Read", &PyClass::Read, py::arg("is"),
-      py::call_guard<py::gil_scoped_release>())
+           py::call_guard<py::gil_scoped_release>())
       .def_static("IsReadInBinary", &PyClass::IsReadInBinary)
       .def("Value", &PyClass::Value, py::return_value_policy::reference,
-      py::call_guard<py::gil_scoped_release>());
+           py::call_guard<py::gil_scoped_release>());
   // TODO(fangjun): wrap other methods when needed
 }
 

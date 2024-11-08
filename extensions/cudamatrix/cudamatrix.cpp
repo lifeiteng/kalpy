@@ -5,25 +5,27 @@ using namespace kaldi;
 
 void init_cudamatrix(py::module &_m) {
   py::module m = _m.def_submodule("cudamatrix", "cudamatrix pybind for Kaldi");
-    m.def("SelectGpuDevice",
-        [](int device_id) {
+  m.def(
+      "SelectGpuDevice",
+      [](int device_id) {
 #if HAVE_CUDA == 1
-          CuDevice::Instantiate().SelectGpuDevice(device_id);
+        CuDevice::Instantiate().SelectGpuDevice(device_id);
 #else
-          KALDI_LOG << "Kaldi is NOT compiled with GPU! Ignore it.";
+        KALDI_LOG << "Kaldi is NOT compiled with GPU! Ignore it.";
 #endif
-        },
-        py::arg("device_id"));
+      },
+      py::arg("device_id"));
 
-  m.def("SelectGpuId",
-        [](const std::string& use_gpu) {
+  m.def(
+      "SelectGpuId",
+      [](const std::string &use_gpu) {
 #if HAVE_CUDA == 1
-          CuDevice::Instantiate().SelectGpuId(use_gpu);
+        CuDevice::Instantiate().SelectGpuId(use_gpu);
 #else
-          KALDI_LOG << "Kaldi is NOT compiled with GPU! Ignore it.";
+        KALDI_LOG << "Kaldi is NOT compiled with GPU! Ignore it.";
 #endif
-        },
-        py::arg("use_gpu"));
+      },
+      py::arg("use_gpu"));
 
   m.def("CuDeviceAllowMultithreading", []() {
 #if HAVE_CUDA == 1
@@ -33,15 +35,16 @@ void init_cudamatrix(py::module &_m) {
 #endif
   });
 
-  m.def("CudaCompiled",
-        []() -> bool {
+  m.def(
+      "CudaCompiled",
+      []() -> bool {
 #if HAVE_CUDA == 1
-          return true;
+        return true;
 #else
-          return false;
+        return false;
 #endif
-        },
-        "true if kaldi is compiled with GPU support; false otherwise");
+      },
+      "true if kaldi is compiled with GPU support; false otherwise");
 
   {
     using PyClass = CuMatrixBase<float>;
@@ -56,7 +59,7 @@ void init_cudamatrix(py::module &_m) {
         .def("Add", &PyClass::Add, py::arg("value"))
         .def("Scale", &PyClass::Scale, py::arg("value"))
         .def("__getitem__",
-             [](const PyClass& m, std::pair<ssize_t, ssize_t> i) {
+             [](const PyClass &m, std::pair<ssize_t, ssize_t> i) {
                return m(i.first, i.second);
              });
   }
@@ -70,7 +73,7 @@ void init_cudamatrix(py::module &_m) {
              py::arg("rows"), py::arg("cols"),
              py::arg("resize_type") = MatrixResizeType::kSetZero,
              py::arg("MatrixStrideType") = MatrixStrideType::kDefaultStride)
-        .def(py::init<const MatrixBase<float>&, MatrixTransposeType>(),
+        .def(py::init<const MatrixBase<float> &, MatrixTransposeType>(),
              py::arg("other"), py::arg("trans") = kNoTrans);
   }
   {
@@ -87,7 +90,7 @@ void init_cudamatrix(py::module &_m) {
         .def("Set", &PyClass::Set, py::arg("value"))
         .def("Add", &PyClass::Add, py::arg("value"))
         .def("Scale", &PyClass::Scale, py::arg("value"))
-        .def("__getitem__", [](const PyClass& v, int i) { return v(i); });
+        .def("__getitem__", [](const PyClass &v, int i) { return v(i); });
   }
   {
     using PyClass = CuVector<float>;
@@ -95,7 +98,7 @@ void init_cudamatrix(py::module &_m) {
         .def(py::init<>())
         .def(py::init<MatrixIndexT, MatrixResizeType>(), py::arg("dim"),
              py::arg("MatrixResizeType") = kSetZero)
-        .def(py::init<const VectorBase<float>&>(), py::arg("v"));
+        .def(py::init<const VectorBase<float> &>(), py::arg("v"));
   }
   {
     using PyClass = CuSubVector<float>;

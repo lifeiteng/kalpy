@@ -1,33 +1,35 @@
 
-#include "chain/pybind_chain.h"
-#include "fstext/pybind_fstext.h"
-
 #include "chain/chain-den-graph.h"
-#include "chain/chain-training.h"
 #include "chain/chain-supervision.h"
+#include "chain/chain-training.h"
+#include "chain/pybind_chain.h"
 #include "cudamatrix/cu-matrix.h"
+#include "fstext/pybind_fstext.h"
 
 using namespace kaldi;
 using namespace kaldi::chain;
 using namespace fst;
 
-void pybind_chain_den_graph(py::module& _m) {
+void pybind_chain_den_graph(py::module &_m) {
   py::module m = _m.def_submodule("chain", "chain pybind for Kaldi");
   using PyClass = DenominatorGraph;
-  py::class_<PyClass>(m, "DenominatorGraph",
-                      "This class is responsible for storing the FST that we use as the"
-                      "'anti-model' or 'denominator-model', that models all possible phone"
-                      "sequences (or most possible phone sequences, depending how we built it).."
-                      "It stores the FST in a format where we can access both the transitions out"
-                      "of each state, and the transitions into each state.")
-    .def(py::init<const StdVectorFst&, int>(),
-         "Initialize from epsilon-free acceptor FST with pdf-ids plus one as the"
-         "labels.  'num_pdfs' is only needeed for checking.",
-         py::arg("fst"), py::arg("num_pdfs"));
+  py::class_<PyClass>(
+      m, "DenominatorGraph",
+      "This class is responsible for storing the FST that we use as the"
+      "'anti-model' or 'denominator-model', that models all possible phone"
+      "sequences (or most possible phone sequences, depending how we built "
+      "it).."
+      "It stores the FST in a format where we can access both the transitions "
+      "out"
+      "of each state, and the transitions into each state.")
+      .def(py::init<const StdVectorFst &, int>(),
+           "Initialize from epsilon-free acceptor FST with pdf-ids plus one as "
+           "the"
+           "labels.  'num_pdfs' is only needeed for checking.",
+           py::arg("fst"), py::arg("num_pdfs"));
 }
 
-
-void pybind_chain_supervision(py::module& m) {
+void pybind_chain_supervision(py::module &m) {
   {
     using PyClass = Supervision;
     py::class_<PyClass>(m, "Supervision",
@@ -36,7 +38,7 @@ void pybind_chain_supervision(py::module& m) {
                         "splitting) part of an utterance.  It contains the "
                         "time limits on phones encoded into the FST.")
         .def(py::init<>())
-        .def(py::init<const PyClass&>(), py::arg("other"))
+        .def(py::init<const PyClass &>(), py::arg("other"))
         .def("Swap", &PyClass::Swap)
         .def_readwrite("weight", &PyClass::weight,
                        "The weight of this example (will usually be 1.0).")
@@ -110,7 +112,7 @@ void pybind_chain_supervision(py::module& m) {
                        "merged by nnet3-chain-merge-egs; it will only be "
                        "present for un-merged egs.")
         .def("__str__",
-             [](const PyClass& sup) {
+             [](const PyClass &sup) {
                std::ostringstream os;
                os << "weight: " << sup.weight << "\n"
                   << "num_sequences: " << sup.num_sequences << "\n"
@@ -123,7 +125,7 @@ void pybind_chain_supervision(py::module& m) {
   }
 }
 
-void pybind_chain_training(py::module& m) {
+void pybind_chain_training(py::module &m) {
   py::class_<ChainTrainingOptions>(m, "ChainTrainingOptions")
       .def(py::init<>())
       .def_readwrite(
@@ -161,22 +163,22 @@ void pybind_chain_training(py::module& m) {
 
   m.def(
       "ComputeChainObjfAndDeriv",
-      [](const ChainTrainingOptions& opts, const DenominatorGraph& den_graph,
-         const Supervision& supervision, const CuMatrixBase<float>& nnet_output,
-         VectorBase<float>* objf_l2_term_weight,
-         CuMatrixBase<float>* nnet_output_deriv,
-         CuMatrixBase<float>* xent_output_deriv = nullptr) {
+      [](const ChainTrainingOptions &opts, const DenominatorGraph &den_graph,
+         const Supervision &supervision, const CuMatrixBase<float> &nnet_output,
+         VectorBase<float> *objf_l2_term_weight,
+         CuMatrixBase<float> *nnet_output_deriv,
+         CuMatrixBase<float> *xent_output_deriv = nullptr) {
         // Note that we have changed `CuMatrix<float>*`
         // to `CuMatrixBase<float>*` for xent_output_deriv
 
-        float* objf = objf_l2_term_weight->Data();
-        float* l2_term = objf_l2_term_weight->Data() + 1;
-        float* weight = objf_l2_term_weight->Data() + 2;
+        float *objf = objf_l2_term_weight->Data();
+        float *l2_term = objf_l2_term_weight->Data() + 1;
+        float *weight = objf_l2_term_weight->Data() + 2;
 
         ComputeChainObjfAndDeriv(
             opts, den_graph, supervision, nnet_output, objf, l2_term, weight,
             nnet_output_deriv,
-            reinterpret_cast<CuMatrix<float>*>(xent_output_deriv));
+            reinterpret_cast<CuMatrix<float> *>(xent_output_deriv));
       },
       py::arg("opts"), py::arg("den_graph"), py::arg("supervision"),
       py::arg("nnet_output"), py::arg("objf_l2_term_weight"),
@@ -184,9 +186,8 @@ void pybind_chain_training(py::module& m) {
 }
 
 void init_chain(py::module &m) {
-    pybind_chain_den_graph(m);
+  pybind_chain_den_graph(m);
 
   pybind_chain_supervision(m);
   pybind_chain_training(m);
-
 }

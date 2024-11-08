@@ -21,17 +21,16 @@
 #define KALDI_PYBIND_KALDI_PYBIND_H_
 
 #define PYBIND11_DETAILED_ERROR_MESSAGES
+#include <pybind11/cast.h>
+#include <pybind11/iostream.h>
 #include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/cast.h>
 #include <pybind11/stl.h>
-#include <pybind11/iostream.h>
 
 namespace py = pybind11;
 
 template <typename... Args>
 using overload_cast_ = py::detail::overload_cast_impl<Args...>;
-
 
 #endif  // KALDI_PYBIND_KALDI_PYBIND_H_

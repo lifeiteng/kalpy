@@ -16,57 +16,31 @@
 
 using namespace kaldi;
 
-void pybind_rnnlm_compute_state(py::module &m) {
+void pybind_rnnlm_compute_state(py::module &m) {}
 
-}
+void pybind_rnnlm_core_compute(py::module &m) {}
 
-void pybind_rnnlm_core_compute(py::module &m) {
+void pybind_rnnlm_core_training(py::module &m) {}
 
-}
+void pybind_rnnlm_embedding_training(py::module &m) {}
 
-void pybind_rnnlm_core_training(py::module &m) {
+void pybind_rnnlm_example_utils(py::module &m) {}
 
-}
+void pybind_rnnlm_example(py::module &m) {}
 
-void pybind_rnnlm_embedding_training(py::module &m) {
+void pybind_rnnlm_lattice_rescoring(py::module &m) {}
 
-}
+void pybind_rnnlm_test_util(py::module &m) {}
 
-void pybind_rnnlm_example_utils(py::module &m) {
+void pybind_rnnlm_training(py::module &m) {}
 
-}
+void pybind_rnnlm_utils(py::module &m) {}
 
-void pybind_rnnlm_example(py::module &m) {
+void pybind_rnnlm_sampler(py::module &m) {}
 
-}
+void pybind_rnnlm_sampling_lm_estimate(py::module &m) {}
 
-void pybind_rnnlm_lattice_rescoring(py::module &m) {
-
-}
-
-void pybind_rnnlm_test_util(py::module &m) {
-
-}
-
-void pybind_rnnlm_training(py::module &m) {
-
-}
-
-void pybind_rnnlm_utils(py::module &m) {
-
-}
-
-void pybind_rnnlm_sampler(py::module &m) {
-
-}
-
-void pybind_rnnlm_sampling_lm_estimate(py::module &m) {
-
-}
-
-void pybind_rnnlm_sampling_lm(py::module &m) {
-
-}
+void pybind_rnnlm_sampling_lm(py::module &m) {}
 
 void init_rnnlm(py::module &_m) {
   py::module m = _m.def_submodule("rnnlm", "rnnlm pybind for Kaldi");

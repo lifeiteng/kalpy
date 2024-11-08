@@ -1,27 +1,22 @@
 
-#include "util/pybind_util.h"
-#include "util/kaldi-table.h"
-#include "util/kaldi-io.h"
-#include "util/kaldi-holder-inl.h"
-#include "util/parse-options.h"
-#include "util/const-integer-set.h"
-#include "itf/options-itf.h"
-
-#include "hmm/transition-model.h"
-#include "tree/context-dep.h"
-#include "matrix/kaldi-matrix.h"
-#include "lm/const-arpa-lm.h"
-
 #include "base/kaldi-error.h"
+#include "hmm/transition-model.h"
+#include "itf/options-itf.h"
+#include "lm/const-arpa-lm.h"
+#include "matrix/kaldi-matrix.h"
+#include "tree/context-dep.h"
+#include "util/const-integer-set.h"
+#include "util/kaldi-holder-inl.h"
+#include "util/kaldi-io.h"
+#include "util/kaldi-table.h"
+#include "util/parse-options.h"
+#include "util/pybind_util.h"
 
 using namespace kaldi;
 
-
 namespace {
 
-void ignore_logs(const LogMessageEnvelope &envelope,
-                           const char *message){
-                           }
+void ignore_logs(const LogMessageEnvelope &envelope, const char *message) {}
 LogHandler kalpy_log_handler = &ignore_logs;
 LogHandler old_logger = SetLogHandler(*kalpy_log_handler);
 
@@ -31,7 +26,7 @@ struct ArgName;
 #define DEFINE_ARG_NAME(type, name)             \
   template <>                                   \
   struct ArgName<type> {                        \
-    static constexpr const char* value = #name; \
+    static constexpr const char *value = #name; \
   }
 
 DEFINE_ARG_NAME(bool, BoolArg);
@@ -47,47 +42,49 @@ template <typename Type>
 struct Arg {
   Type value{};
   Arg() = default;
-  Arg(const Type& v) : value(v) {}
+  Arg(const Type &v) : value(v) {}
 };
 
 template <typename Type, typename Opt>
-void pybind_arg(py::module& m, Opt& opt) {
+void pybind_arg(py::module &m, Opt &opt) {
   using PyClass = Arg<Type>;
   py::class_<PyClass>(m, ArgName<Type>::value)
       .def(py::init<>())
-      .def(py::init<const Type&>(), py::arg("v"))
+      .def(py::init<const Type &>(), py::arg("v"))
       .def_readwrite("value", &PyClass::value)
-      .def("__str__", [](const PyClass& arg) {
+      .def("__str__", [](const PyClass &arg) {
         std::ostringstream os;
         os << arg.value;
         return os.str();
       });
 
-  opt.def("Register",
-          [](typename Opt::type* o, const std::string& name, PyClass* arg,
-             const std::string& doc) { o->Register(name, &arg->value, doc); },
-          py::arg("name"), py::arg("arg"), py::arg("doc"));
+  opt.def(
+      "Register",
+      [](typename Opt::type *o, const std::string &name, PyClass *arg,
+         const std::string &doc) { o->Register(name, &arg->value, doc); },
+      py::arg("name"), py::arg("arg"), py::arg("doc"));
 }
-
 
 }  // namespace
 
 void init_util(py::module &_m) {
   py::module m = _m.def_submodule("util", "util pybind for Kaldi");
 
+  PYBIND11_CONSTINIT static py::gil_safe_call_once_and_store<py::object>
+      exc_storage;
 
-    PYBIND11_CONSTINIT static py::gil_safe_call_once_and_store<py::object> exc_storage;
+  exc_storage.call_once_and_store_result([&]() {
+    return py::exception<KaldiFatalError>(m, "KaldiFatalError",
+                                          PyExc_RuntimeError);
+  });
 
-    exc_storage.call_once_and_store_result(
-        [&]() { return py::exception<KaldiFatalError>(m, "KaldiFatalError", PyExc_RuntimeError); });
-
-    py::register_exception_translator([](std::exception_ptr p) {
-        try {
-            if (p) std::rethrow_exception(p);
-        } catch (const KaldiFatalError &e) {
-            py::set_error(exc_storage.get_stored(), e.KaldiMessage());
-        }
-    });
+  py::register_exception_translator([](std::exception_ptr p) {
+    try {
+      if (p) std::rethrow_exception(p);
+    } catch (const KaldiFatalError &e) {
+      py::set_error(exc_storage.get_stored(), e.KaldiMessage());
+    }
+  });
 
   pybind_basic_vector_holder<int32>(m, "IntVectorHolder");
   py::class_<std::istream>(m, "istream");
@@ -96,34 +93,35 @@ void init_util(py::module &_m) {
     py::class_<PyClass>(m, "Input")
         .def(py::init<>())
         .def(py::init<const std::string &, bool *>())
-        .def("Open",
-             [](PyClass* ki, const std::string& rxfilename,
-                bool read_header = false) -> std::vector<bool> {
-               std::vector<bool> result(1, false);
-               if (read_header) {
-                 result.resize(2, false);
-                 bool tmp;
-                 result[0] = ki->Open(rxfilename, &tmp);
-                 result[1] = tmp;
-               } else {
-                 result[0] = ki->Open(rxfilename);
-               }
-               return result;
-             },
-             "Open the stream for reading. "
-             "Return a vector containing one bool or two depending on "
-             "whether `read_header` is false or true."
-             "\n",
-             "(1) If `read_header` is true, it returns [opened, binary], where "
-             "`opened` is true if the stream was opened successfully, false "
-             "otherwise;\n"
-             "`binary` is true if the stream was opened **and** in binary "
-             "format\n"
-             "\n"
-             "(2) If `read_header` is false, it returns [opened], where "
-             "`opened` is true if the stream was opened successfully, false "
-             "otherwise",
-             py::arg("rxfilename"), py::arg("read_header") = false)
+        .def(
+            "Open",
+            [](PyClass *ki, const std::string &rxfilename,
+               bool read_header = false) -> std::vector<bool> {
+              std::vector<bool> result(1, false);
+              if (read_header) {
+                result.resize(2, false);
+                bool tmp;
+                result[0] = ki->Open(rxfilename, &tmp);
+                result[1] = tmp;
+              } else {
+                result[0] = ki->Open(rxfilename);
+              }
+              return result;
+            },
+            "Open the stream for reading. "
+            "Return a vector containing one bool or two depending on "
+            "whether `read_header` is false or true."
+            "\n",
+            "(1) If `read_header` is true, it returns [opened, binary], where "
+            "`opened` is true if the stream was opened successfully, false "
+            "otherwise;\n"
+            "`binary` is true if the stream was opened **and** in binary "
+            "format\n"
+            "\n"
+            "(2) If `read_header` is false, it returns [opened], where "
+            "`opened` is true if the stream was opened successfully, false "
+            "otherwise",
+            py::arg("rxfilename"), py::arg("read_header") = false)
         // the constructor and `Open` method both require a `bool*` argument
         // but pybind11 does not support passing a pointer to a primitive
         // type, only pointer to customized type is allowed.
@@ -154,7 +152,7 @@ void init_util(py::module &_m) {
     using PyClass = Output;
     py::class_<PyClass>(m, "Output")
         .def(py::init<>())
-        .def(py::init<const std::string&, bool, bool>(),
+        .def(py::init<const std::string &, bool, bool>(),
              "The normal constructor, provided for convenience. Equivalent to "
              "calling with default constructor then Open() with these "
              "arguments.",
@@ -190,28 +188,19 @@ void init_util(py::module &_m) {
     using PyClass = ConstIntegerSet<int32>;
     py::class_<PyClass>(m, "ConstIntegerSet")
         .def(py::init<>())
-        .def(py::init<const std::vector<int32> &>(),
-             py::arg("input"))
-        .def(py::init<const std::set<int32> &>(),
-             py::arg("input"))
-        .def(py::init<const ConstIntegerSet<int32> &>(),
-             py::arg("other"))
-        .def("count", &PyClass::count,
-             py::arg("i"))
+        .def(py::init<const std::vector<int32> &>(), py::arg("input"))
+        .def(py::init<const std::set<int32> &>(), py::arg("input"))
+        .def(py::init<const ConstIntegerSet<int32> &>(), py::arg("other"))
+        .def("count", &PyClass::count, py::arg("i"))
         .def("begin", &PyClass::begin)
         .def("end", &PyClass::end)
         .def("size", &PyClass::size)
         .def("empty", &PyClass::empty)
-        .def("Write", &PyClass::Write,
-             py::arg("os"),
-             py::arg("binary"),
-      py::call_guard<py::gil_scoped_release>())
-        .def("Read", &PyClass::Read,
-             py::arg("is"),
-             py::arg("binary"),
-      py::call_guard<py::gil_scoped_release>());
+        .def("Write", &PyClass::Write, py::arg("os"), py::arg("binary"),
+             py::call_guard<py::gil_scoped_release>())
+        .def("Read", &PyClass::Read, py::arg("is"), py::arg("binary"),
+             py::call_guard<py::gil_scoped_release>());
   }
-
 
   pybind_sequential_table_reader<KaldiObjectHolder<Matrix<float>>>(
       m, "SequentialBaseFloatMatrixReader");
@@ -266,20 +255,20 @@ void init_util(py::module &_m) {
   pybind_random_access_table_reader<BasicVectorVectorHolder<int32>>(
       m, "RandomAccessInt32VectorVectorReader");
 
-  pybind_table_writer<BasicVectorVectorHolder<int32>>(m, "Int32VectorVectorWriter");
+  pybind_table_writer<BasicVectorVectorHolder<int32>>(
+      m, "Int32VectorVectorWriter");
 
-  pybind_sequential_table_reader<BasicHolder<int32>>(
-      m, "SequentialInt32Reader");
+  pybind_sequential_table_reader<BasicHolder<int32>>(m,
+                                                     "SequentialInt32Reader");
 
   pybind_random_access_table_reader<BasicHolder<int32>>(
       m, "RandomAccessInt32Reader");
 
   pybind_table_writer<BasicHolder<int32>>(m, "Int32Writer");
 
-    pybind_read_kaldi_object<TransitionModel>(m);
-    pybind_read_kaldi_object<ContextDependency>(m);
-    pybind_read_kaldi_object<MatrixBase<float>>(m);
-    pybind_read_kaldi_object<MatrixBase<double>>(m);
-    pybind_read_kaldi_object<ConstArpaLm>(m);
-
+  pybind_read_kaldi_object<TransitionModel>(m);
+  pybind_read_kaldi_object<ContextDependency>(m);
+  pybind_read_kaldi_object<MatrixBase<float>>(m);
+  pybind_read_kaldi_object<MatrixBase<double>>(m);
+  pybind_read_kaldi_object<ConstArpaLm>(m);
 }

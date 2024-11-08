@@ -5,7 +5,6 @@
 #include "pybind/kaldi_pybind.h"
 #include "util/pybind_util.h"
 
-
 void init_matrix(py::module &);
 void pybind_matrix_common(py::module &);
 void pybind_kaldi_vector(py::module &);

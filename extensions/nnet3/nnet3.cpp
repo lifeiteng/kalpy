@@ -1,22 +1,20 @@
 
-#include "nnet3/pybind_nnet3.h"
-
-#include "nnet3/nnet-common.h"
 #include "nnet3/nnet-chain-example.h"
-#include "nnet3/nnet-nnet.h"
-#include "nnet3/nnet-simple-component.h"
-#include "nnet3/nnet-normalize-component.h"
-#include "nnet3/nnet-example.h"
-#include "util/pybind_util.h"
-#include "nnet3/nnet-convolutional-component.h"
-#include "nnet3/nnet-component-itf.h"
 #include "nnet3/nnet-common.h"
+#include "nnet3/nnet-component-itf.h"
+#include "nnet3/nnet-convolutional-component.h"
+#include "nnet3/nnet-example.h"
+#include "nnet3/nnet-nnet.h"
+#include "nnet3/nnet-normalize-component.h"
+#include "nnet3/nnet-simple-component.h"
+#include "nnet3/pybind_nnet3.h"
+#include "util/pybind_util.h"
 
 using namespace kaldi;
 using namespace kaldi::nnet3;
 using namespace kaldi::chain;
 
-void pybind_nnet_chain_example(py::module& m) {
+void pybind_nnet_chain_example(py::module &m) {
   {
     using PyClass = NnetChainSupervision;
     py::class_<PyClass>(
@@ -66,7 +64,7 @@ void pybind_nnet_chain_example(py::module& m) {
             "disk compactly as unsigned char.")
         .def("CheckDim", &PyClass::CheckDim)
         .def("__str__",
-             [](const PyClass& sup) {
+             [](const PyClass &sup) {
                std::ostringstream os;
                os << "name: " << sup.name << "\n";
                return os.str();
@@ -83,7 +81,7 @@ void pybind_nnet_chain_example(py::module& m) {
         .def("Compress", &PyClass::Compress,
              "Compresses the input features (if not compressed)")
         .def("__eq__",
-             [](const PyClass& a, const PyClass& b) { return a == b; })
+             [](const PyClass &a, const PyClass &b) { return a == b; })
         .def("Read", &PyClass::Read, py::arg("is"), py::arg("binary"));
 
     // (fangjun): we follow the PyKaldi style to prepend a underline before the
@@ -101,8 +99,7 @@ void pybind_nnet_chain_example(py::module& m) {
   }
 }
 
-
-void pybind_nnet_common(py::module& m) {
+void pybind_nnet_common(py::module &m) {
   {
     // Index is need by NnetChainSupervision in nnet_chain_example_pybind.cc
     using PyClass = Index;
@@ -124,10 +121,10 @@ void pybind_nnet_common(py::module& m) {
                        "this may come in useful in convolutional approaches. "
                        "it is possible to add extra index here, if needed.")
         .def("__eq__",
-             [](const PyClass& a, const PyClass& b) { return a == b; })
+             [](const PyClass &a, const PyClass &b) { return a == b; })
         .def("__ne__",
-             [](const PyClass& a, const PyClass& b) { return a != b; })
-        .def("__lt__", [](const PyClass& a, const PyClass& b) { return a < b; })
+             [](const PyClass &a, const PyClass &b) { return a != b; })
+        .def("__lt__", [](const PyClass &a, const PyClass &b) { return a < b; })
         .def(py::self + py::self)
         .def(py::self += py::self)
         // TODO(fangjun): other methods can be wrapped when needed
@@ -135,10 +132,10 @@ void pybind_nnet_common(py::module& m) {
   }
 }
 
-void pybind_nnet_component_itf(py::module& m) {
+void pybind_nnet_component_itf(py::module &m) {
   using PyClass = Component;
   py::class_<PyClass>(m, "Component",
-                   "Abstract base-class for neural-net components.")
+                      "Abstract base-class for neural-net components.")
       .def("Type", &PyClass::Type,
            "Returns a string such as \"SigmoidComponent\", describing the "
            "type of the object.")
@@ -151,18 +148,15 @@ void pybind_nnet_component_itf(py::module& m) {
                   py::return_value_policy::take_ownership);
 }
 
-
-void pybind_nnet_convolutional_component(py::module& m) {
+void pybind_nnet_convolutional_component(py::module &m) {
   using TC = kaldi::nnet3::TdnnComponent;
   py::class_<TC, Component>(m, "TdnnComponent")
       .def("LinearParams", &TC::LinearParams,
            py::return_value_policy::reference)
-      .def("BiasParams", &TC::BiasParams,
-           py::return_value_policy::reference);
+      .def("BiasParams", &TC::BiasParams, py::return_value_policy::reference);
 }
 
-
-void pybind_nnet_example(py::module& m) {
+void pybind_nnet_example(py::module &m) {
   {
     using PyClass = NnetIo;
     py::class_<PyClass>(m, "NnetIo")
@@ -180,27 +174,31 @@ void pybind_nnet_example(py::module& m) {
   {
     using PyClass = NnetExample;
     py::class_<PyClass>(m, "NnetExample",
-    "NnetExample is the input data and corresponding label (or labels) for one or "
-    "more frames of input, used for standard cross-entropy training of neural "
-    "nets (and possibly for other objective functions). ")
+                        "NnetExample is the input data and corresponding label "
+                        "(or labels) for one or "
+                        "more frames of input, used for standard cross-entropy "
+                        "training of neural "
+                        "nets (and possibly for other objective functions). ")
         .def(py::init<>())
         .def_readwrite("io", &PyClass::io,
-        "\"io\" contains the input and output.  In principle there can be multiple "
-        "types of both input and output, with different names.  The order is "
-        "irrelevant.")
+                       "\"io\" contains the input and output.  In principle "
+                       "there can be multiple "
+                       "types of both input and output, with different names.  "
+                       "The order is "
+                       "irrelevant.")
         .def("Compress", &PyClass::Compress,
              "Compresses any (input) features that are not sparse.")
         .def("Read", &PyClass::Read, py::arg("is"), py::arg("binary"));
 
     pybind_sequential_table_reader<KaldiObjectHolder<PyClass>>(
-      m, "_SequentialNnetExampleReader");
+        m, "_SequentialNnetExampleReader");
 
     pybind_random_access_table_reader<KaldiObjectHolder<PyClass>>(
-      m, "_RandomAccessNnetExampleReader");
+        m, "_RandomAccessNnetExampleReader");
   }
 }
 
-void pybind_nnet_normalize_component(py::module& m) {
+void pybind_nnet_normalize_component(py::module &m) {
   using PyClass = kaldi::nnet3::BatchNormComponent;
   py::class_<PyClass, Component>(m, "BatchNormComponent")
       .def("SetTestMode", &PyClass::SetTestMode, py::arg("test_mode"))
@@ -209,7 +207,7 @@ void pybind_nnet_normalize_component(py::module& m) {
            py::return_value_policy::reference);
 }
 
-void pybind_nnet_simple_component(py::module& m) {
+void pybind_nnet_simple_component(py::module &m) {
   using FAC = FixedAffineComponent;
   py::class_<FAC, Component>(m, "FixedAffineComponent")
       .def("LinearParams", &FAC::LinearParams,
@@ -230,7 +228,7 @@ void pybind_nnet_simple_component(py::module& m) {
   py::class_<NGAC, AC>(m, "NaturalGradientAffineComponent");
 }
 
-void pybind_nnet_nnet(py::module& m) {
+void pybind_nnet_nnet(py::module &m) {
   using PyClass = kaldi::nnet3::Nnet;
   auto nnet = py::class_<PyClass>(
       m, "Nnet",
@@ -253,10 +251,10 @@ void pybind_nnet_nnet(py::module& m) {
            "nnet-utils.h, which prints out more extensive infoformation.")
       .def("NumComponents", &PyClass::NumComponents)
       .def("NumNodes", &PyClass::NumNodes)
-      .def("GetComponent", (Component * (PyClass::*)(int32)) & PyClass::GetComponent,
+      .def("GetComponent",
+           (Component * (PyClass::*)(int32)) & PyClass::GetComponent,
            py::arg("c"), py::return_value_policy::reference);
 }
-
 
 void init_nnet3(py::module &_m) {
   py::module m = _m.def_submodule("nnet3", "nnet3 pybind for Kaldi");
