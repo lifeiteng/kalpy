@@ -19,3 +19,11 @@ pip install kalpy-kaldi
 ## Usage
 
 Two libraries are installed, `_kalpy` which contains low level bindings conforming to the original C++ style, and `kalpy` which is a more pythonic interface for higher level operations.  The `kalpy` package is under heavy development and expansion to expose more functionality.
+
+## Formating
+#### python .pre-commit-config.yaml
+#### c++ .clang-format
+```
+sudo apt install -y clang-format
+clang-format -i extensions/*/*.cpp extensions/*/*.h
+```
