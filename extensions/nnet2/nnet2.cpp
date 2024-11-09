@@ -53,7 +53,7 @@ class PyNnet2Component : public Component {
                            Component,       // Parent class (cname)
                            InitFromString,  // Name of function in C++ (must
                                             // match Python name) (fn)
-                           args  // Argument(s) (...)
+                           args             // Argument(s) (...)
     );
   }
 
@@ -61,7 +61,7 @@ class PyNnet2Component : public Component {
     PYBIND11_OVERRIDE_PURE(int32,      // Return type (ret_type)
                            Component,  // Parent class (cname)
                            InputDim    // Name of function in C++ (must match
-                                     // Python name) (fn) Argument(s) (...)
+                                       // Python name) (fn) Argument(s) (...)
     );
   }
 
@@ -69,7 +69,7 @@ class PyNnet2Component : public Component {
     PYBIND11_OVERRIDE_PURE(int32,      // Return type (ret_type)
                            Component,  // Parent class (cname)
                            OutputDim   // Name of function in C++ (must match
-                                      // Python name) (fn) Argument(s) (...)
+                                       // Python name) (fn) Argument(s) (...)
     );
   }
 
@@ -144,7 +144,7 @@ class PyNnet2NonlinearComponent : public NonlinearComponent {
                            Component,       // Parent class (cname)
                            InitFromString,  // Name of function in C++ (must
                                             // match Python name) (fn)
-                           args  // Argument(s) (...)
+                           args             // Argument(s) (...)
     );
   }
 
@@ -152,7 +152,7 @@ class PyNnet2NonlinearComponent : public NonlinearComponent {
     PYBIND11_OVERRIDE_PURE(int32,      // Return type (ret_type)
                            Component,  // Parent class (cname)
                            InputDim    // Name of function in C++ (must match
-                                     // Python name) (fn) Argument(s) (...)
+                                       // Python name) (fn) Argument(s) (...)
     );
   }
 
@@ -160,7 +160,7 @@ class PyNnet2NonlinearComponent : public NonlinearComponent {
     PYBIND11_OVERRIDE_PURE(int32,      // Return type (ret_type)
                            Component,  // Parent class (cname)
                            OutputDim   // Name of function in C++ (must match
-                                      // Python name) (fn) Argument(s) (...)
+                                       // Python name) (fn) Argument(s) (...)
     );
   }
 
@@ -235,7 +235,7 @@ class PyNnet2UpdatableComponent : public UpdatableComponent {
                            Component,       // Parent class (cname)
                            InitFromString,  // Name of function in C++ (must
                                             // match Python name) (fn)
-                           args  // Argument(s) (...)
+                           args             // Argument(s) (...)
     );
   }
 
@@ -243,7 +243,7 @@ class PyNnet2UpdatableComponent : public UpdatableComponent {
     PYBIND11_OVERRIDE_PURE(int32,      // Return type (ret_type)
                            Component,  // Parent class (cname)
                            InputDim    // Name of function in C++ (must match
-                                     // Python name) (fn) Argument(s) (...)
+                                       // Python name) (fn) Argument(s) (...)
     );
   }
 
@@ -251,7 +251,7 @@ class PyNnet2UpdatableComponent : public UpdatableComponent {
     PYBIND11_OVERRIDE_PURE(int32,      // Return type (ret_type)
                            Component,  // Parent class (cname)
                            OutputDim   // Name of function in C++ (must match
-                                      // Python name) (fn) Argument(s) (...)
+                                       // Python name) (fn) Argument(s) (...)
     );
   }
 

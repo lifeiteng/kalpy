@@ -12,5 +12,8 @@ void pybind_nnet_chain_example(py::module &);
 void pybind_nnet_nnet(py::module &);
 void pybind_nnet_normalize_component(py::module &);
 void pybind_nnet_simple_component(py::module &);
+void pybind_nnet_simple_computation_options(py::module &);
+void pybind_nnet_am_nnet_simple(py::module &);
+
 void init_nnet3(py::module &);
 #endif  // KALPY_PYBIND_NNET3_H_

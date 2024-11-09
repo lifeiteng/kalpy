@@ -1,4 +1,15 @@
 
+#include "decoder/decoder-wrappers.h"
+#include "decoder/faster-decoder.h"
+#include "decoder/training-graph-compiler.h"
+#include "fstext/fstext-lib.h"
+#include "hmm/hmm-utils.h"
+#include "hmm/posterior.h"
+#include "hmm/transition-model.h"
+#include "lat/kaldi-lattice.h"
+#include "lat/lattice-functions.h"
+#include "nnet3/am-nnet-simple.h"
+#include "nnet3/nnet-am-decodable-simple.h"
 #include "nnet3/nnet-chain-example.h"
 #include "nnet3/nnet-common.h"
 #include "nnet3/nnet-component-itf.h"
@@ -7,10 +18,16 @@
 #include "nnet3/nnet-nnet.h"
 #include "nnet3/nnet-normalize-component.h"
 #include "nnet3/nnet-simple-component.h"
+#include "nnet3/nnet-utils.h"
 #include "nnet3/pybind_nnet3.h"
+#include "tree/build-tree-questions.h"
+#include "tree/build-tree-utils.h"
+#include "tree/clusterable-classes.h"
+#include "tree/context-dep.h"
 #include "util/pybind_util.h"
 
 using namespace kaldi;
+using namespace fst;
 using namespace kaldi::nnet3;
 using namespace kaldi::chain;
 
@@ -256,6 +273,43 @@ void pybind_nnet_nnet(py::module &m) {
            py::arg("c"), py::return_value_policy::reference);
 }
 
+void pybind_nnet_am_nnet_simple(py::module &m) {
+  using PyClass = kaldi::nnet3::AmNnetSimple;
+  auto nnet = py::class_<PyClass>(m, "AmNnetSimple",
+                                  "This function can be used either to "
+                                  "initialize a new AmNnetSimple from a "
+                                  "config file.");
+  nnet.def(py::init<>())
+      .def("Read", &PyClass::Read, py::arg("in_stream"), py::arg("binary"),
+           py::call_guard<py::gil_scoped_release>())
+      .def("Write", &PyClass::Write, py::arg("out_stream"), py::arg("binary"),
+           py::call_guard<py::gil_scoped_release>())
+      .def("NumPdfs", &PyClass::NumPdfs);
+  //  .def("GetNnet", &kaldi::nnet3::Nnet,
+  //       "Caution: if you structurally change the nnet, you should call "
+  //       "SetContext() afterward.", py::return_value_policy::reference);
+}
+
+void pybind_nnet_simple_computation_options(py::module &m) {
+  {
+    using PyClass = NnetSimpleComputationOptions;
+
+    auto nnet_simple_computation_options =
+        py::class_<PyClass>(m, "NnetSimpleComputationOptions");
+    nnet_simple_computation_options.def(py::init<>())
+        .def_readwrite("extra_left_context", &PyClass::extra_left_context)
+        .def_readwrite("extra_right_context", &PyClass::extra_right_context)
+        .def_readwrite("extra_left_context_initial",
+                       &PyClass::extra_left_context_initial)
+        .def_readwrite("extra_right_context_final",
+                       &PyClass::extra_right_context_final)
+        .def_readwrite("frame_subsampling_factor",
+                       &PyClass::frame_subsampling_factor)
+        .def_readwrite("frames_per_chunk", &PyClass::frames_per_chunk)
+        .def_readwrite("acoustic_scale", &PyClass::acoustic_scale);
+  }
+}
+
 void init_nnet3(py::module &_m) {
   py::module m = _m.def_submodule("nnet3", "nnet3 pybind for Kaldi");
   pybind_nnet_common(m);
@@ -266,4 +320,84 @@ void init_nnet3(py::module &_m) {
   pybind_nnet_nnet(m);
   pybind_nnet_normalize_component(m);
   pybind_nnet_simple_component(m);
+  pybind_nnet_simple_computation_options(m);
+  pybind_nnet_am_nnet_simple(m);
+
+  m.def(
+      "nnet3_align_compiled",
+      [](const TransitionModel &trans_model, const AmNnetSimple &am_nnet,
+         const NnetSimpleComputationOptions &decodable_opts,
+         VectorFst<StdArc> *decode_fst, const Matrix<BaseFloat> &features,
+         BaseFloat acoustic_scale = 1.0, BaseFloat transition_scale = 1.0,
+         BaseFloat self_loop_scale = 1.0, BaseFloat beam = 10.0,
+         BaseFloat retry_beam = 40.0, bool careful = false
+
+      ) {
+        py::gil_scoped_release gil_release;
+
+        {                                    // Add transition-probs to the FST.
+          std::vector<int32> disambig_syms;  // empty.
+          AddTransitionProbs(trans_model, disambig_syms, transition_scale,
+                             self_loop_scale, decode_fst);
+        }
+
+        SetBatchnormTestMode(true, const_cast<Nnet *>(&(am_nnet.GetNnet())));
+        SetDropoutTestMode(true, const_cast<Nnet *>(&(am_nnet.GetNnet())));
+        CollapseModel(CollapseModelConfig(),
+                      const_cast<Nnet *>(&(am_nnet.GetNnet())));
+
+        std::vector<int32> alignment;
+        std::vector<int32> words;
+        LatticeWeight weight;
+        BaseFloat like = 0.0;
+        Vector<BaseFloat> per_frame_loglikes;
+
+        DecodableAmNnetSimple decodable(decodable_opts, trans_model, am_nnet,
+                                        features, NULL, NULL, 0, NULL);
+
+        if (careful) ModifyGraphForCarefulAlignment(decode_fst);
+
+        FasterDecoderOptions decode_opts;
+        decode_opts.beam = beam;
+
+        FasterDecoder decoder(*decode_fst, decode_opts);
+        decoder.Decode(&decodable);
+
+        bool ans = decoder.ReachedFinal();  // consider only final states.
+        bool retried = false;
+        if (!ans && retry_beam != 0.0) {
+          decode_opts.beam = retry_beam;
+          decoder.SetOptions(decode_opts);
+          decoder.Decode(&decodable);
+          ans = decoder.ReachedFinal();
+          retried = true;
+        }
+
+        if (!ans) {  // Still did not reach final state.
+          py::gil_scoped_acquire gil_acquire;
+          return py::make_tuple(alignment, words, like, per_frame_loglikes, ans,
+                                retried);
+        }
+
+        fst::VectorFst<LatticeArc> decoded;  // linear FST.
+        decoder.GetBestPath(&decoded);
+        if (decoded.NumStates() == 0) {
+          py::gil_scoped_acquire gil_acquire;
+          return py::make_tuple(alignment, words, like, per_frame_loglikes, ans,
+                                retried);
+        }
+
+        GetLinearSymbolSequence(decoded, &alignment, &words, &weight);
+        like = -(weight.Value1() + weight.Value2()) / acoustic_scale;
+        GetPerFrameAcousticCosts(decoded, &per_frame_loglikes);
+        per_frame_loglikes.Scale(-1 / acoustic_scale);
+        py::gil_scoped_acquire gil_acquire;
+        return py::make_tuple(alignment, words, like, per_frame_loglikes, ans,
+                              retried);
+      },
+      py::arg("trans_model"), py::arg("am_nnet"), py::arg("decodable_opts"),
+      py::arg("decode_fst"), py::arg("features"),
+      py::arg("acoustic_scale") = 1.0, py::arg("transition_scale") = 1.0,
+      py::arg("self_loop_scale") = 1.0, py::arg("beam") = 10.0,
+      py::arg("retry_beam") = 40.0, py::arg("careful") = false);
 }

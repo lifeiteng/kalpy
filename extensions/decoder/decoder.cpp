@@ -19,6 +19,7 @@
 #include "fstext/pybind_fstext.h"
 #include "gmm/decodable-am-diag-gmm.h"
 #include "gmm/diag-gmm.h"
+#include "hmm/hmm-utils.h"
 #include "hmm/transition-model.h"
 #include "lat/lattice-functions.h"
 #include "matrix/kaldi-matrix.h"
@@ -2028,4 +2029,72 @@ void init_decoder(py::module &_m) {
       py::arg("decoder"), py::arg("decodable"), py::arg("trans_model"),
       py::arg("acoustic_scale"), py::arg("determinize"),
       py::arg("allow_partial"));
+
+  m.def(
+      "align_compiled_mapped",
+      [](const TransitionModel &trans_model, VectorFst<StdArc> *decode_fst,
+         const Matrix<BaseFloat> &loglikes, BaseFloat acoustic_scale = 1.0,
+         BaseFloat transition_scale = 1.0, BaseFloat self_loop_scale = 1.0,
+         BaseFloat beam = 10.0, BaseFloat retry_beam = 40.0,
+         bool careful = false) {
+        py::gil_scoped_release gil_release;
+
+        {                                    // Add transition-probs to the FST.
+          std::vector<int32> disambig_syms;  // empty.
+          AddTransitionProbs(trans_model, disambig_syms, transition_scale,
+                             self_loop_scale, decode_fst);
+        }
+
+        std::vector<int32> alignment;
+        std::vector<int32> words;
+        LatticeWeight weight;
+        BaseFloat like = 0.0;
+        Vector<BaseFloat> per_frame_loglikes;
+        DecodableMatrixScaledMapped decodable(trans_model, loglikes,
+                                              acoustic_scale);
+
+        if (careful) ModifyGraphForCarefulAlignment(decode_fst);
+
+        FasterDecoderOptions decode_opts;
+        decode_opts.beam = beam;
+
+        FasterDecoder decoder(*decode_fst, decode_opts);
+        decoder.Decode(&decodable);
+
+        bool ans = decoder.ReachedFinal();  // consider only final states.
+        bool retried = false;
+        if (!ans && retry_beam != 0.0) {
+          decode_opts.beam = retry_beam;
+          decoder.SetOptions(decode_opts);
+          decoder.Decode(&decodable);
+          ans = decoder.ReachedFinal();
+          retried = true;
+        }
+
+        if (!ans) {  // Still did not reach final state.
+          py::gil_scoped_acquire gil_acquire;
+          return py::make_tuple(alignment, words, like, per_frame_loglikes, ans,
+                                retried);
+        }
+
+        fst::VectorFst<LatticeArc> decoded;  // linear FST.
+        decoder.GetBestPath(&decoded);
+        if (decoded.NumStates() == 0) {
+          py::gil_scoped_acquire gil_acquire;
+          return py::make_tuple(alignment, words, like, per_frame_loglikes, ans,
+                                retried);
+        }
+
+        GetLinearSymbolSequence(decoded, &alignment, &words, &weight);
+        like = -(weight.Value1() + weight.Value2()) / acoustic_scale;
+        GetPerFrameAcousticCosts(decoded, &per_frame_loglikes);
+        per_frame_loglikes.Scale(-1 / acoustic_scale);
+        py::gil_scoped_acquire gil_acquire;
+        return py::make_tuple(alignment, words, like, per_frame_loglikes, ans,
+                              retried);
+      },
+      py::arg("trans_model"), py::arg("decode_fst"), py::arg("loglikes"),
+      py::arg("acoustic_scale") = 1.0, py::arg("transition_scale") = 1.0,
+      py::arg("self_loop_scale") = 1.0, py::arg("beam") = 10.0,
+      py::arg("retry_beam") = 40.0, py::arg("careful") = false);
 }

@@ -27,6 +27,7 @@ class GmmAligner:
     def __init__(
         self,
         acoustic_model_path: typing.Union[pathlib.Path, str],
+        read_model_fn: typing.Callable = read_gmm_model,
         acoustic_scale: float = 1.0,
         transition_scale: float = 1.0,
         self_loop_scale: float = 1.0,
@@ -36,7 +37,7 @@ class GmmAligner:
         disambiguation_symbols: typing.List[int] = None,
     ):
         self.acoustic_model_path = str(acoustic_model_path)
-        self.transition_model, self.acoustic_model = read_gmm_model(self.acoustic_model_path)
+        self.transition_model, self.acoustic_model = read_model_fn(self.acoustic_model_path)
         self.acoustic_scale = acoustic_scale
         self.transition_scale = transition_scale
         self.self_loop_scale = self_loop_scale

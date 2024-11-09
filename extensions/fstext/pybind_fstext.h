@@ -4,6 +4,7 @@
 
 #include <fst/extensions/far/far-class.h>
 
+// fmt:off
 #include "_pywrapfst.h"
 #include "base/kaldi-common.h"
 #include "fst/fstlib.h"
@@ -12,11 +13,11 @@
 #include "fst/script/print-impl.h"
 #include "fstext/fstext-utils.h"
 #include "fstext/kaldi-fst-io.h"
-#include "fstext/lattice-utils-inl.h"
 #include "fstext/lattice-utils.h"
 #include "pybind/kaldi_pybind.h"
 #include "util/common-utils.h"
 #include "util/pybind_util.h"
+// fmt:on
 
 using namespace fst;
 
@@ -58,7 +59,7 @@ class PyFst : public Fst<A> {
                            Fst<A>,            // Parent class (cname)
                            NumInputEpsilons,  // Name of function in C++ (must
                                               // match Python name) (fn)
-                           s  // Argument(s) (...)
+                           s                  // Argument(s) (...)
     );
   }
 
@@ -67,7 +68,7 @@ class PyFst : public Fst<A> {
                            Fst<A>,             // Parent class (cname)
                            NumOutputEpsilons,  // Name of function in C++ (must
                                                // match Python name) (fn)
-                           s  // Argument(s) (...)
+                           s                   // Argument(s) (...)
     );
   }
 
@@ -118,7 +119,7 @@ class PyFst : public Fst<A> {
                            Fst<A>,             // Parent class (cname)
                            InitStateIterator,  // Name of function in C++ (must
                                                // match Python name) (fn)
-                           data  // Argument(s) (...)
+                           data                // Argument(s) (...)
     );
   }
 
@@ -128,7 +129,7 @@ class PyFst : public Fst<A> {
                            Fst<A>,           // Parent class (cname)
                            InitArcIterator,  // Name of function in C++ (must
                                              // match Python name) (fn)
-                           s, data  // Argument(s) (...)
+                           s, data           // Argument(s) (...)
     );
   }
 
@@ -189,7 +190,7 @@ class PyExpandedFst : public ExpandedFst<A> {
                            ExpandedFst<A>,    // Parent class (cname)
                            NumInputEpsilons,  // Name of function in C++ (must
                                               // match Python name) (fn)
-                           s  // Argument(s) (...)
+                           s                  // Argument(s) (...)
     );
   }
 
@@ -198,7 +199,7 @@ class PyExpandedFst : public ExpandedFst<A> {
                            ExpandedFst<A>,     // Parent class (cname)
                            NumOutputEpsilons,  // Name of function in C++ (must
                                                // match Python name) (fn)
-                           s  // Argument(s) (...)
+                           s                   // Argument(s) (...)
     );
   }
 
@@ -249,7 +250,7 @@ class PyExpandedFst : public ExpandedFst<A> {
                            ExpandedFst<A>,     // Parent class (cname)
                            InitStateIterator,  // Name of function in C++ (must
                                                // match Python name) (fn)
-                           data  // Argument(s) (...)
+                           data                // Argument(s) (...)
     );
   }
 
@@ -259,7 +260,7 @@ class PyExpandedFst : public ExpandedFst<A> {
                            ExpandedFst<A>,   // Parent class (cname)
                            InitArcIterator,  // Name of function in C++ (must
                                              // match Python name) (fn)
-                           s, data  // Argument(s) (...)
+                           s, data           // Argument(s) (...)
     );
   }
 
@@ -312,7 +313,7 @@ class PyMutableFst : public MutableFst<A> {
                            MutableFst<A>,     // Parent class (cname)
                            NumInputEpsilons,  // Name of function in C++ (must
                                               // match Python name) (fn)
-                           s  // Argument(s) (...)
+                           s                  // Argument(s) (...)
     );
   }
 
@@ -321,7 +322,7 @@ class PyMutableFst : public MutableFst<A> {
                            MutableFst<A>,      // Parent class (cname)
                            NumOutputEpsilons,  // Name of function in C++ (must
                                                // match Python name) (fn)
-                           s  // Argument(s) (...)
+                           s                   // Argument(s) (...)
     );
   }
 
@@ -372,7 +373,7 @@ class PyMutableFst : public MutableFst<A> {
                            MutableFst<A>,      // Parent class (cname)
                            InitStateIterator,  // Name of function in C++ (must
                                                // match Python name) (fn)
-                           data  // Argument(s) (...)
+                           data                // Argument(s) (...)
     );
   }
 
@@ -382,7 +383,7 @@ class PyMutableFst : public MutableFst<A> {
                            MutableFst<A>,    // Parent class (cname)
                            InitArcIterator,  // Name of function in C++ (must
                                              // match Python name) (fn)
-                           s, data  // Argument(s) (...)
+                           s, data           // Argument(s) (...)
     );
   }
 
@@ -546,7 +547,7 @@ class PyMutableFst : public MutableFst<A> {
                            MutableFst<A>,    // Parent class (cname)
                            SetInputSymbols,  // Name of function in C++ (must
                                              // match Python name) (fn)
-                           isyms  // Argument(s) (...)
+                           isyms             // Argument(s) (...)
     );
   }
 
@@ -555,7 +556,7 @@ class PyMutableFst : public MutableFst<A> {
                            MutableFst<A>,     // Parent class (cname)
                            SetOutputSymbols,  // Name of function in C++ (must
                                               // match Python name) (fn)
-                           osyms  // Argument(s) (...)
+                           osyms              // Argument(s) (...)
     );
   }
 
@@ -566,7 +567,7 @@ class PyMutableFst : public MutableFst<A> {
         MutableFst<A>,           // Parent class (cname)
         InitMutableArcIterator,  // Name of function in C++ (must match Python
                                  // name) (fn)
-        s, data  // Argument(s) (...)
+        s, data                  // Argument(s) (...)
     );
   }
 };

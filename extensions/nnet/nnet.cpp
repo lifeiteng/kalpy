@@ -155,7 +155,7 @@ class PyRbmBase : public RbmBase {
     PYBIND11_OVERRIDE_PURE(RbmNodeType,  // Return type (ret_type)
                            RbmBase,      // Parent class (cname)
                            VisType       // Name of function in C++ (must match
-                                    // Python name) (fn) Argument(s) (...)
+                                         // Python name) (fn) Argument(s) (...)
     );
   }
 
@@ -163,7 +163,7 @@ class PyRbmBase : public RbmBase {
     PYBIND11_OVERRIDE_PURE(RbmNodeType,  // Return type (ret_type)
                            RbmBase,      // Parent class (cname)
                            HidType       // Name of function in C++ (must match
-                                    // Python name) (fn) Argument(s) (...)
+                                         // Python name) (fn) Argument(s) (...)
     );
   }
 
@@ -239,7 +239,7 @@ class PyLossItf : public LossItf {
     PYBIND11_OVERRIDE_PURE(BaseFloat,  // Return type (ret_type)
                            LossItf,    // Parent class (cname)
                            AvgLoss     // Name of function in C++ (must match
-                                    // Python name) (fn) Argument(s) (...)
+                                       // Python name) (fn) Argument(s) (...)
     );
   }
 };
