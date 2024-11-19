@@ -257,17 +257,8 @@ class PitchComputer:
         :class:`_kalpy.matrix.FloatMatrixBase`
             Feature matrix for the segment
         """
-        duration = None
-        if segment.end is not None and segment.begin is not None:
-            duration = segment.end - segment.begin
-        wave, sr = librosa.load(
-            segment.file_path,
-            sr=16000,
-            offset=segment.begin,
-            duration=duration,
-            mono=False,
-        )
-        wave = np.round(wave * 32768)
+        wave = segment.kaldi_wave
+
         if len(wave.shape) == 2:
             channel = 0 if segment.channel is None else segment.channel
             wave = wave[channel, :]

@@ -1,3 +1,4 @@
+import logging
 import typing
 
 import dataclassy
@@ -10,7 +11,7 @@ from _kalpy.feat import (
     sliding_window_cmn,
     splice_frames,
 )
-from _kalpy.matrix import DoubleMatrix, FloatMatrix
+from _kalpy.matrix import DoubleMatrix, FloatMatrix, kCopyData
 from _kalpy.transform import ApplyCmvn, apply_transform
 from kalpy.data import Segment
 from kalpy.feat.mfcc import MfccComputer
@@ -62,6 +63,16 @@ class Utterance:
 
         if pitch_computer is not None:
             pitch = pitch_computer.compute_pitch_for_export(self.segment, compress=False)
+            if pitch.NumRows() != feats.NumRows():
+                logging.info(
+                    f"MissMatched Pitch: {pitch.NumRows()}x{pitch.NumCols()} Feature: {feats.NumRows()}x{feats.NumCols()}"
+                )
+                assert pitch.NumRows() > feats.NumRows()
+                pitch.Resize(feats.NumRows(), pitch.NumCols(), kCopyData)
+                logging.info(
+                    f"      Fixed Pitch: {pitch.NumRows()}x{pitch.NumCols()} Feature: {feats.NumRows()}x{feats.NumCols()}"
+                )
+
             feats = paste_feats([feats, pitch], 0)
         if uses_splices:
             feats = splice_frames(feats, splice_context, splice_context)
